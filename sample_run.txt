@@ -1,0 +1,4 @@
+# Command to run docker env
+docker run -it --name aeroriver \
+    -v <path-to-ardupilot>:/app/ardupilot:rw \
+    env
