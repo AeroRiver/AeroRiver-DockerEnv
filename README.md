@@ -28,45 +28,67 @@ FROM ubuntu:latest
 - Esse comando define a imagem base que será utilizada como ponto de partida para a construção do contêiner. Nesse caso, é utilizada a versão mais recente disponível da imagem do Ubuntu.
 
 ```bash
-RUN apt-get update && \
-    apt-get install -y sudo curl git build-essential python3-pip python3-distutils gcc-arm-none-eabi binutils-arm-none-eabi g++ clang && \
-    rm -rf /var/lib/apt/lists/*
-```
-- Aqui temos a instalação dos pacotes módulos e programas necessários para a construção do código do ArduPilot. Eventuais depêndencias e atualizações de pacotes são adicionados aqui.
-
-```bash
-RUN useradd -m -s /bin/bash -u 1002 aeroriver && \
-    usermod -aG sudo aeroriver && \
-    echo "aeroriver ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-```
-- Esse bloco de comandos executa a criação e configuração de um novo usuário dentro do ambiente Docker. Alguns scripts do ardupilot não podem ser executados como root, a criação de um usuário com permissão de sudo, facilita o trabalho dentro do contêiner.
-
-```bash
 WORKDIR /app
 ```
 - Define o diretório de trabalho para /app, o que significa que todos os comandos subsequentes serão executados nesse diretório.
 
 ```bash
-USER aeroriver
+ARG USER_NAME="aeroriver"
+ARG OPT="/opt"
+ARG PKGS="sudo git g++ wget build-essential ccache g++-arm-linux-gnueabihf python3-pip python3-distutils"
+ARG ARM_ROOT="gcc-arm-none-eabi-10-2020-q4-major"
 ```
-- Define o usuário padrão para a execução dos comandos subsequentes, sendo esse usuário o criado anteriormente.
+- Definição de algumas variáveis a serem utilizadas nas configurações do Docker.
 
 ```bash
-RUN pip install --user empy=3.3.4 pexpect future
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    $PKGS && \
+    rm -rf /var/lib/apt/lists/*
 ```
-- Esse bloco de comandos instala pacotes Python necessários para a execução do ardupilot. Novas depêndencias de pacotes ou atualização de versão são realizadas aqui.
+- Instalação dos pacotes básicos definidos na em PKGS, novos pacotes são adicionados nessa variável para instalação.
 
 ```bash
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
-ENV CC=/usr/bin/gcc
-ENV CXX=/usr/bin/g++
+RUN cd $OPT && \
+    sudo wget --no-check-certificate --progress=dot:giga https://firmware.ardupilot.org/Tools/STM32-tools/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 && \
+    sudo chmod -R 777 gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 && \
+    sudo tar xjf gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 && \
+    sudo rm gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 && \
+    sudo ln -s -f $(which ccache) /usr/lib/ccache/arm-none-eabi-g++ && \
+    sudo ln -s -f $(which ccache) /usr/lib/ccache/arm-none-eabi-gcc
 ```
-- Aqui há a definição das variáveis de ambiente para os compiladores C e C++, e a especificação dos diretórios nos quais o sistema deve procurar por executáveis quando um comando é executado.
+- Bloco para instalação do pacote arm-none-eabi, essencial para a compilação do código ardupilot.
+
+```bash
+ENV PATH="${OPT}/gcc-arm-none-eabi-10-2020-q4-major/bin:${PATH}"
+```
+- Configuração do caminho do compilador arm.
+
+```bash
+RUN useradd -m -s /bin/bash -u 1002 $USER_NAME && \
+    usermod -aG sudo $USER_NAME && \
+    echo "$USER_NAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER $USER_NAME
+```
+- Criação do usúario não root com permissões sudo.
+
+```bash
+RUN pip install --user empy==3.3.4 pexpect future
+```
+- Instalação de pacotes de python utilizados pelo ardupilot, dentro da pasta do usuário.
+
+```bash
+RUN sudo apt-get clean && \
+    sudo apt-get autoclean && \
+    sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+```
+- Limpeza de pacotes e variáveis temporárias para economizar espaço em disco.
 
 ```bash
 CMD ["bash"]
 ```
-- Define o comando padrão a ser executado quando o contêiner é iniciado. Nesse caso, inicia um terminal Shell Bash.
+- Definição do comando a ser executado ao entrar no contêiner.
 
 ---
 
