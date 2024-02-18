@@ -3,7 +3,7 @@ WORKDIR /app
 
 ARG USER_NAME="aeroriver"
 ARG OPT="/opt"
-ARG PKGS="sudo curl git g++ wget build-essential bash-completion ccache g++-arm-linux-gnueabihf python3-pip python3-distutils"
+ARG PKGS="sudo curl git g++ wget build-essential ccache g++-arm-linux-gnueabihf python3-pip python3-distutils"
 ARG ARM_ROOT="gcc-arm-none-eabi-10-2020-q4-major"
 
 
