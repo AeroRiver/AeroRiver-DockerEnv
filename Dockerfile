@@ -30,4 +30,8 @@ USER $USER_NAME
 
 RUN pip install --user empy==3.3.4 pexpect future
 
+RUN sudo apt-get clean && \
+    sudo apt-get autoclean && \
+    sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 CMD ["bash"]
