@@ -141,6 +141,11 @@ contêiner ->      ./waf [Nome-do-veículo]
 
 Com isso o processo de build do ArduPilot é executado utilizando as dependências e pacotes do ambiente virtual e o binário do ardupilot (arduplane.exe ou arduplane por exemplo) fica disponível na pasta do host.
 
+**ATT - ** Atualização para buildar o Docker com a biblioteca para executar a janela OSD ->
+```bash
+./waf configure --board=SITL --osd --enable-smfl --sitl-osd
+```
+
 ---
 
 Este repositório contém o [Dockerfile](Dockerfile) com as configurações mais recentes do ambiente virtual e os arquivos de [build](sample_build.txt) e [run](sample_run.txt). Este README apresenta uma visão geral do funcionamento e configuração do ambiente Docker,
