@@ -23,9 +23,9 @@ Para o passo-a-passo da instalação do Docker Engine veja o [Tutorial de Instal
 Dockerfile é um arquivo de texto simples que contem uma lista de instruções que o Docker utiliza para criar a imagem do contêiner. A sua estrutura é simples:
 
 ```bash
-FROM ubuntu:latest
+FROM ubuntu:22.04
 ```
-- Esse comando define a imagem base que será utilizada como ponto de partida para a construção do contêiner. Nesse caso, é utilizada a versão mais recente disponível da imagem do Ubuntu.
+- Esse comando define a imagem base que será utilizada como ponto de partida para a construção do contêiner. Anteriormente utilizava-se da versão mais recente (latest) do ubuntu, mas devido a problemas de incompatibilidade de pacotes e bibliotecas foi definido o uso da versão 22.04.
 
 ```bash
 WORKDIR /app
@@ -35,7 +35,7 @@ WORKDIR /app
 ```bash
 ARG USER_NAME="aeroriver"
 ARG OPT="/opt"
-ARG PKGS="sudo git g++ wget build-essential ccache g++-arm-linux-gnueabihf python3-pip python3-distutils"
+ARG PKGS="sudo git g++ wget build-essential ccache g++-arm-linux-gnueabihf python3-pip python3-distutils libsfml-dev cmak libgtest-dev liblua5.3 rsync"
 ARG ARM_ROOT="gcc-arm-none-eabi-10-2020-q4-major"
 ```
 - Definição de algumas variáveis a serem utilizadas nas configurações do Docker.
@@ -46,7 +46,7 @@ RUN apt-get update && \
     $PKGS && \
     rm -rf /var/lib/apt/lists/*
 ```
-- Instalação dos pacotes básicos definidos na em PKGS, novos pacotes são adicionados nessa variável para instalação.
+- Instalação dos pacotes básicos definidos em PKGS, novos pacotes são adicionados nessa variável para instalação.
 
 ```bash
 RUN cd $OPT && \
@@ -77,6 +77,14 @@ USER $USER_NAME
 RUN pip install --user empy==3.3.4 pexpect future
 ```
 - Instalação de pacotes de python utilizados pelo ardupilot, dentro da pasta do usuário.
+
+```bash
+RUN cd /usr/src/googletest && \
+    sudo cmake CMakeLists.txt && \
+    sudo make && \
+    sudo cp lib/libgtest*.a /usr/lib
+```
+- Configuração da biblioteca GTest para testes unitários.
 
 ```bash
 RUN sudo apt-get clean && \
@@ -144,9 +152,22 @@ Com isso o processo de build do ArduPilot é executado utilizando as dependênci
 
 ## Atualizações -
 
-- Atualização para buildar o Docker com a biblioteca para executar a janela OSD ->
+- Atualização para buildar o ArduPilot carregando a biblioteca para executar a janela OSD ->
 ```bash
 ./waf configure --board=SITL --osd --enable-sfml --sitl-osd
+```
+
+- Atualização para buildar o ArduPilot para testes unitários com GTest ->
+```bash
+./waf configure --board=linux --debug
+./waf tests
+```
+
+- Atualização para buildar o Ardupilot para testes unitários com autotest - Veja o commit [Help doc for running ardupilot unit tests](https://github.com/AeroRiver/AeroRiver-ArduPilot/commit/a46ad8f6f7e7d07feca4074863b43349ed8ceda4) para mais detalhes ->
+```bash
+./waf configure --board=SITL --debug
+./waf plane
+./Tools/autotest/autotest.py --no-configure test.Plane
 ```
 
 ---
