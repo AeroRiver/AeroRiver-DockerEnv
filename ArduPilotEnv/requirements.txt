@@ -1,0 +1,13 @@
+To run unit tests require GTest lib, CMake and lua
+
+sudo apt install cmake
+sudo apt install libgtest-dev
+cd /usr/src/googletest
+sudo cmake
+sudo make
+sudo cp lib/libgtest*.a /usr/lib
+
+sudo apt isntall liblua5.3-dev
+
+sudo apt install rsync
+

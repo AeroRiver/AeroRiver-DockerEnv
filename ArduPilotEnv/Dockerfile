@@ -1,9 +1,9 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 WORKDIR /app
 
 ARG USER_NAME="aeroriver"
 ARG OPT="/opt"
-ARG PKGS="sudo git g++ wget build-essential ccache g++-arm-linux-gnueabihf python3-pip python3-distutils libsfml-dev"
+ARG PKGS="sudo git g++ wget build-essential ccache g++-arm-linux-gnueabihf python3-pip python3-distutils libsfml-dev cmake libgtest-dev liblua5.3 rsync"
 ARG ARM_ROOT="gcc-arm-none-eabi-10-2020-q4-major"
 
 RUN apt-get update && \
@@ -28,6 +28,11 @@ RUN useradd -m -s /bin/bash -u 1002 $USER_NAME && \
 USER $USER_NAME 
 
 RUN pip install --user empy==3.3.4 pexpect future
+
+RUN cd /usr/src/googletest && \
+    sudo cmake CMakeLists.txt && \
+    sudo make && \
+    sudo cp lib/libgtest*.a /usr/lib
 
 RUN sudo apt-get clean && \
     sudo apt-get autoclean && \
